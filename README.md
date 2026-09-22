@@ -4,6 +4,8 @@
 > A lightweight, modern Python desktop application designed to convert raw ZKTeco biometric attendance device exports (`.xls`, `.xlsx`, `.html`) into structured, clean daily summary spreadsheets, with optional MySQL database integration.
 
 ---
+## Sample UI
+![image_alt](https://github.com/Wilfred1097/ZKTime-Parser/blob/main/UI-1.PNG?raw=true)
 
 ## ✨ Key Features
 
@@ -72,10 +74,10 @@ pyinstaller --noconsole --onefile --name="ZKTime Parser" --icon=icon/calendar.ic
 4, Click Process & Save to export the structured attendance summary to an Excel file.
 
 ---
-## MySQL Connection Guide
-If you wish to configure or integrate MySQL database storage for the attendance logs, follow this configuration guide:
+## MySQL Connection & Schema Guide
+The application connects to a MySQL database (such as XAMPP) to fetch and merge employee metadata (employees, sections, and positions) with your raw attendance logs.
 
-1. **Database Requirements**
+1. **Database Setup**
 Make sure you have a running MySQL server (such as XAMPP, WampServer, or a cloud instance) and create a database:
 
 ```SQL
@@ -84,50 +86,44 @@ Make sure you have a running MySQL server (such as XAMPP, WampServer, or a cloud
 ```
 
 2. **Required Table Schema**
-Create an attendance summary table matching the processed data structure:
+To allow the application to correctly query and link employee records, your database must include the following relational tables::
 
 ```SQL
-   CREATE TABLE attendance_logs (
+   -- Sections Table
+   CREATE TABLE sections (
        id INT AUTO_INCREMENT PRIMARY KEY,
-       emp_name VARCHAR(100),
-       emp_id VARCHAR(50),
-       shift_date VARCHAR(50),
-       time_in VARCHAR(50),
-       time_out VARCHAR(50),
-       worked_hours VARCHAR(20),
-       late_mins VARCHAR(20)
+       section_name VARCHAR(100) NOT NULL
+   );
+
+-- Positions Table
+   CREATE TABLE positions (
+       id INT AUTO_INCREMENT PRIMARY KEY,
+       position_name VARCHAR(100) NOT NULL
+   );
+
+-- Employees Table (Linked to Sections and Positions)
+   CREATE TABLE employees (
+       id INT AUTO_INCREMENT PRIMARY KEY,
+       user_id VARCHAR(50) NOT NULL,       -- Matches the Biometric Machine Emp ID
+       employee_id VARCHAR(50) NOT NULL,
+       employee_name VARCHAR(150) NOT NULL,
+       section_id INT,
+       position_id INT,
+       FOREIGN KEY (section_id) REFERENCES sections(id),
+       FOREIGN KEY (position_id) REFERENCES positions(id)
    );
 ```
-3. **Python Connection Example (PyMySQL)**
-You can use the following snippet within your project to connect and insert processed records directly into your MySQL database:
+3. **Connecting via the App GUI** 
 
-```Python
-   import pymysql
-```
+Instead of hardcoding credentials, the application includes a built-in DB Settings modal:
 
-# Establish connection
-```python
-connection = pymysql.connect(
-    host='localhost',
-    user='root',
-    password='your_password',
-    database='zkteco_db',
-    charset='utf8mb4',
-    cursorclass=pymysql.cursors.DictCursor
-)
+- Click the ⚙️ DB Settings button in the top-right corner of the application window.
+- Enter your connection details:
+    + Host: localhost (default)
+    + Port: 3306 (default)
+    + Username: root (default for XAMPP)
+    + Password: (leave blank if default XAMPP)
+- Click Test & Save Settings. The app will verify the connection and securely save an encrypted configuration file (db_config.json) locally.
 
-try:
-    with connection.cursor() as cursor:
-        # Example insert query
-        sql = """
-            INSERT INTO attendance_logs 
-            (emp_name, emp_id, shift_date, time_in, time_out, worked_hours, late_mins) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
-        # Pass your DataFrame rows or record tuples here
-        # cursor.executemany(sql, list_of_tuples)
-        
-    connection.commit()
-finally:
-    connection.close()
-```
+## Sample UI
+![image_alt](https://github.com/Wilfred1097/ZKTime-Parser/blob/main/database_config.PNG?raw=true)
