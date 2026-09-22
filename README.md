@@ -17,7 +17,6 @@
 * **Interactive Data Preview:** View, search, and filter processed records directly within the app before saving.
 * **Export Ready:** Outputs structured reports directly to clean Excel (`.xlsx`) files or pushes records straight to a MySQL database.
 * **Modern GUI:** Built with Python's `Tkinter` with a clean, responsive layout and custom hover styling.
-* 
 ---
 
 ## 🚀 Built With
